@@ -1,0 +1,84 @@
+import java.util.Scanner;
+
+
+public class Task4 {
+
+    //i ask ai for this and innovate by using scanner.
+ {
+        
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Enter a word: ");
+
+        String text = scanner.nextLine();
+
+
+        String reversed = new StringBuilder(text).reverse().toString();
+
+        if(text.equals(reversed)){
+            System.out.println(text + " is a palindrome.");
+           
+        }else {
+            System.out.println(text +  " not palindrome.");
+        } 
+        scanner.close();
+    }
+    
+}
+
+// this is my final task4 no ai 
+ class palindrome {
+
+    public static void main(String[] args) {
+
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Enter a word: ");
+        String input = scanner.nextLine();
+        String original = input;
+        original.replace(" ", ""); // im using this so that the space will auto work ex. for race car.
+
+        String reverse = "";
+        for(int i = original.length() - 1; i >= 0; i--){
+            reverse += original.charAt(i);
+                System.out.println(reverse);
+        }
+
+        boolean palindrome = true;
+        for (int i = 0; i < original.length(); i++){
+            if (original.charAt(i) != reverse.charAt(i)) {
+                palindrome = false;
+            }
+        }
+            if(palindrome){
+                System.out.println("PALINDROME");
+              
+            }else{
+                System.out.println("NOT PALINDROME!");
+            }
+
+        scanner.close();
+
+    }
+}
+
+class Task3 {
+ public static void main(String[] args) {
+    
+    String a = new String("WOW");
+    String b =  "WO";
+    String c = a;
+    String d = c;
+
+    boolean b1 = a == d; //false by changing to d it will be true and false if b
+    boolean b2 = d.equals(b = a); // false
+    boolean b3 = c.equals(a); //by removing this "!" let assume it's true
+
+    if (b1 &&  b2 && b3) {
+        System.out.println("Success"); //  there will be no output since it's false
+    }else{ 
+        System.out.println("False");
+    }
+ }
+    
+}
