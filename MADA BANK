@@ -1,0 +1,415 @@
+package bank;
+
+import java.util.Scanner;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+
+// 📦 User Model
+public class User {
+    String username;
+    String mpin;
+    String password;
+    String role; // ROLE = "USER" or "ADMIN"
+    double balance;
+    ArrayList<String> transactionLogs;
+
+    // Constructor
+    public User(String username, String mpin, String password, double initialDeposit, String role) {
+        this.username = username;
+        this.mpin = mpin;
+        this.password = password;
+        this.balance = initialDeposit;
+        this.role = role;
+        this.transactionLogs = new ArrayList<>();
+        addLog("✅ Account Created | 🔑 Role: " + role + " | 💵 Initial Deposit: PHP " + String.format("%.2f", initialDeposit));
+    }
+
+    // 📝 Add transaction log
+    public void addLog(String action) {
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        transactionLogs.add("⏱️ " + timestamp + " | " + action);
+    }
+}
+
+// 🏦 MADA BANK MAIN SYSTEM
+class Mada {
+    static Scanner scanner = new Scanner(System.in);
+    static ArrayList<User> userList = new ArrayList<>();
+    static User currentUser;
+    static boolean isRunning = true;
+
+    public static void main(String[] args) {
+        // 🔑 DEFAULT ADMIN ACCOUNT: Mark / 1102
+        userList.add(new User("Mark", "1102", "admin123", 0.0, "ADMIN"));
+
+        while (true) {
+            System.out.println("\n===== 🟢 MADA BANK 🏦 =====");
+            System.out.println("🔐 1. Login");
+            System.out.println("📝 2. Register New Account");
+            System.out.println("👋 3. Exit");
+            System.out.print("👉 Enter your choice: ");
+            int choice = scanner.nextInt();
+            scanner.nextLine(); // Clear buffer
+
+            switch (choice) {
+                case 1:
+                    login();
+                    break;
+                case 2:
+                    register();
+                    break;
+                case 3:
+                    System.out.println("👋 Thank you! Goodbye!");
+                    return;
+                default:
+                    System.out.println("❌ Invalid choice! Try again");
+            }
+        }
+    }
+
+    // ---------------- 📝 REGISTER NEW USER ----------------
+    static void register() {
+        System.out.println("\n===== 📝 CREATE NEW ACCOUNT =====");
+        
+        System.out.print("✍️ Enter desired Username: ");
+        String newUser = scanner.nextLine();
+
+        // Check if username exists
+        for (User u : userList) {
+            if (u.username.equalsIgnoreCase(newUser)) {
+                System.out.println("❌ Username already taken! Try another");
+                return;
+            }
+        }
+
+        System.out.print("✍️ Enter MPIN (4 digits only): ");
+        String newMpin = scanner.nextLine();
+        if (newMpin.length() != 4 || !newMpin.matches("\\d+")) {
+            System.out.println("❌ MPIN must be exactly 4 numbers!");
+            return;
+        }
+
+        System.out.print("💵 Enter Initial Deposit (PHP): ");
+        double deposit = scanner.nextDouble();
+        scanner.nextLine();
+        if (deposit <= 0) {
+            System.out.println("❌ Initial deposit must be greater than 0!");
+            return;
+        }
+
+        // New accounts = USER role only
+        String role = "USER";
+        userList.add(new User(newUser, newMpin, newMpin, deposit, role));
+        System.out.println("✅ Account Created Successfully! You can now login");
+    }
+
+    // ---------------- 🔐 LOGIN SYSTEM ----------------
+    static void login() {
+        System.out.println("\n===== 🔐 LOGIN =====");
+        
+        System.out.print("✍️ Enter Username: ");
+        String user = scanner.nextLine();
+
+        System.out.print("✍️ Enter MPIN: ");
+        String mpin = scanner.nextLine();
+
+        // Validate credentials
+        for (User u : userList) {
+            if (u.username.equalsIgnoreCase(user) && u.mpin.equals(mpin)) {
+                currentUser = u;
+                currentUser.addLog("✅ Logged In | 🔑 Role: " + currentUser.role);
+                System.out.println("\n✅ Login Successful! Welcome " + currentUser.username);
+
+                // Redirect menu based on role
+                if (currentUser.role.equals("ADMIN")) {
+                    adminMenu();
+                } else {
+                    userMenu();
+                }
+                return;
+            }
+        }
+        System.out.println("❌ Invalid Username or MPIN!");
+    }
+
+    // ---------------- 👤 USER MENU ----------------
+    static void userMenu() {
+        isRunning = true;
+        while (isRunning) {
+            System.out.println("\n************************");
+            System.out.println("👤 USER MENU - MADA BANK");
+            System.out.println("**********************");
+            System.out.println("💰 1. Show Balance");
+            System.out.println("📥 2. Deposit Money");
+            System.out.println("📤 3. Withdraw Money");
+            System.out.println("📜 4. View My Transaction Logs");
+            System.out.println("🔓 5. Logout");
+            System.out.println("**********************");
+
+            System.out.print("👉 Enter your choice (1-5): ");
+            int choice = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (choice) {
+                case 1:
+                    showBalance();
+                    break;
+                case 2:
+                    deposit();
+                    break;
+                case 3:
+                    withdraw();
+                    break;
+                case 4:
+                    showMyLogs();
+                    break;
+                case 5:
+                    isRunning = false;
+                    currentUser.addLog("🔓 Logged Out");
+                    System.out.println("👋 Logged out successfully!");
+                    return;
+                default:
+                    System.out.println("❌ Invalid choice! Try again");
+            }
+        }
+    }
+
+    // ---------------- 🛡️ ADMIN MENU ----------------
+    static void adminMenu() {
+        isRunning = true;
+        while (isRunning) {
+            System.out.println("\n************************");
+            System.out.println("🛡️ ADMIN MENU - MADA BANK");
+            System.out.println("**********************");
+            System.out.println("📋 1. View All Registered Users");
+            System.out.println("📑 2. View All Transactions (All Users)");
+            System.out.println("🔍 3. Search User by Username");
+            System.out.println("📥 4. Deposit to Any User Account");
+            System.out.println("📤 5. Withdraw from Any User Account");
+            System.out.println("🗑️ 6. Delete User Account");
+            System.out.println("🔓 7. Logout");
+            System.out.println("**********************");
+
+            System.out.print("👉 Enter your choice (1-7): ");
+            int choice = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (choice) {
+                case 1:
+                    viewAllUsers();
+                    break;
+                case 2:
+                    viewAllTransactions();
+                    break;
+                case 3:
+                    searchUser();
+                    break;
+                case 4:
+                    adminDeposit();
+                    break;
+                case 5:
+                    adminWithdraw();
+                    break;
+                case 6:
+                    deleteUser();
+                    break;
+                case 7:
+                    isRunning = false;
+                    currentUser.addLog("🔓 Admin Logged Out");
+                    System.out.println("👋 Admin logged out successfully!");
+                    return;
+                default:
+                    System.out.println("❌ Invalid choice! Try again");
+            }
+        }
+    }
+
+    // ---------------- 👤 USER FEATURES ----------------
+    static void showBalance() {
+        System.out.println("💰 Current Balance: PHP " + String.format("%.2f", currentUser.balance));
+    }
+
+    static void deposit() {
+        System.out.print("💵 Enter amount to deposit (PHP): ");
+        double amount = scanner.nextDouble();
+        scanner.nextLine();
+
+        if (amount <= 0) {
+            System.out.println("❌ Amount must be greater than 0!");
+            return;
+        }
+
+        currentUser.balance += amount;
+        currentUser.addLog("📥 Deposit: +PHP " + String.format("%.2f", amount) + " | 💰 New Balance: PHP " + String.format("%.2f", currentUser.balance));
+        System.out.println("✅ Deposit Successful! New Balance: PHP " + String.format("%.2f", currentUser.balance));
+    }
+
+    static void withdraw() {
+        System.out.print("💵 Enter amount to withdraw (PHP): ");
+        double amount = scanner.nextDouble();
+        scanner.nextLine();
+
+        if (amount <= 0) {
+            System.out.println("❌ Amount must be greater than 0!");
+            return;
+        }
+        if (amount > currentUser.balance) {
+            System.out.println("❌ Insufficient Balance!");
+            return;
+        }
+
+        currentUser.balance -= amount;
+        currentUser.addLog("📤 Withdrawal: -PHP " + String.format("%.2f", amount) + " | 💰 New Balance: PHP " + String.format("%.2f", currentUser.balance));
+        System.out.println("✅ Withdrawal Successful! New Balance: PHP " + String.format("%.2f", currentUser.balance));
+    }
+
+    static void showMyLogs() {
+        System.out.println("\n===== 📜 YOUR TRANSACTION HISTORY =====");
+        for (String log : currentUser.transactionLogs) {
+            System.out.println(log);
+        }
+    }
+
+    // ---------------- 🛡️ ADMIN FEATURES ----------------
+    static void viewAllUsers() {
+        System.out.println("\n===== 📋 ALL REGISTERED USERS =====");
+        System.out.printf("%-15s | %-6s | %-12s%n", "USERNAME", "ROLE", "BALANCE");
+        System.out.println("-------------------------------------------");
+        for (User u : userList) {
+            System.out.printf("%-15s | %-6s | PHP %.2f%n", u.username, u.role, u.balance);
+        }
+    }
+
+    static void viewAllTransactions() {
+        System.out.println("\n===== 📑 ALL TRANSACTIONS (ALL USERS) =====");
+        for (User u : userList) {
+            System.out.println("\n--- 👤 User: " + u.username + " | 🔑 Role: " + u.role + " ---");
+            for (String log : u.transactionLogs) {
+                System.out.println(log);
+            }
+        }
+    }
+
+    static void searchUser() {
+        System.out.print("✍️ Enter username to search: ");
+        String searchName = scanner.nextLine();
+        boolean found = false;
+
+        for (User u : userList) {
+            if (u.username.equalsIgnoreCase(searchName)) {
+                found = true;
+                System.out.println("\n✅ User Found:");
+                System.out.println("👤 Username: " + u.username);
+                System.out.println("🔑 Role: " + u.role);
+                System.out.println("💰 Balance: PHP " + String.format("%.2f", u.balance));
+                break;
+            }
+        }
+        if (!found) System.out.println("❌ User not found!");
+    }
+
+    // ✅ Admin Deposit to ANY user
+    static void adminDeposit() {
+        System.out.println("\n===== 📥 ADMIN DEPOSIT TO USER =====");
+        System.out.print("✍️ Enter target Username: ");
+        String targetName = scanner.nextLine();
+        User targetUser = null;
+
+        // Find user
+        for (User u : userList) {
+            if (u.username.equalsIgnoreCase(targetName)) {
+                targetUser = u;
+                break;
+            }
+        }
+
+        if (targetUser == null) {
+            System.out.println("❌ Target user not found!");
+            return;
+        }
+
+        System.out.print("💵 Enter amount to deposit (PHP): ");
+        double amount = scanner.nextDouble();
+        scanner.nextLine();
+
+        if (amount <= 0) {
+            System.out.println("❌ Amount must be greater than 0!");
+            return;
+        }
+
+        // Update balance
+        targetUser.balance += amount;
+        // Log to USER history
+        targetUser.addLog("📥 ADMIN DEPOSIT: +PHP " + String.format("%.2f", amount) + " | 💰 New Balance: PHP " + String.format("%.2f", targetUser.balance));
+        // Log to ADMIN history
+        currentUser.addLog("📥 ADMIN ACTION: Deposited PHP " + String.format("%.2f", amount) + " to user: " + targetUser.username);
+
+        System.out.println("✅ Success! " + targetUser.username + "'s new balance: PHP " + String.format("%.2f", targetUser.balance));
+    }
+
+    // ✅ Admin Withdraw from ANY user (this matches the line in your image!)
+    static void adminWithdraw() {
+        System.out.println("\n===== 📤 ADMIN WITHDRAW FROM USER =====");
+        System.out.print("✍️ Enter target Username: ");
+        String targetName = scanner.nextLine();
+        User targetUser = null;
+
+        // Find user
+        for (User u : userList) {
+            if (u.username.equalsIgnoreCase(targetName)) {
+                targetUser = u;
+                break;
+            }
+        }
+
+        if (targetUser == null) {
+            System.out.println("❌ Target user not found!");
+            return;
+        }
+
+        System.out.print("💵 Enter amount to withdraw (PHP): ");
+        double amount = scanner.nextDouble();
+        scanner.nextLine();
+
+        if (amount <= 0) {
+            System.out.println("❌ Amount must be greater than 0!");
+            return;
+        }
+        if (amount > targetUser.balance) {
+            System.out.println("❌ Target user has insufficient balance!");
+            return;
+        }
+
+        // ✅ This is the exact line from your image
+        targetUser.balance -= amount;
+
+        // Log to USER history
+        targetUser.addLog("📤 ADMIN WITHDRAW: -PHP " + String.format("%.2f", amount) + " | 💰 New Balance: PHP " + String.format("%.2f", targetUser.balance));
+        // Log to ADMIN history
+        currentUser.addLog("📤 ADMIN ACTION: Withdrew PHP " + String.format("%.2f", amount) + " from user: " + targetUser.username);
+
+        System.out.println("✅ Success! " + targetUser.username + "'s new balance: PHP " + String.format("%.2f", targetUser.balance));
+    }
+
+    static void deleteUser() {
+        System.out.print("✍️ Enter username to DELETE: ");
+        String delName = scanner.nextLine();
+
+        // Protect main admin account
+        if (delName.equalsIgnoreCase("Mark")) {
+            System.out.println("❌ Cannot delete main admin account!");
+            return;
+        }
+
+        // Find & remove user
+        for (int i = 0; i < userList.size(); i++) {
+            if (userList.get(i).username.equalsIgnoreCase(delName)) {
+                userList.remove(i);
+                System.out.println("✅ User deleted successfully!");
+                return;
+            }
+        }
+        System.out.println("❌ User not found!");
+    }
+}
