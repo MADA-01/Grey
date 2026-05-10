@@ -1,0 +1,194 @@
+package bank;
+
+import java.util.Scanner;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+
+// store user details
+public class User {
+    String username;
+    String mpin;
+    String password;
+    double balance;
+    ArrayList<String> transactionLogs;
+
+    public User(String username, String mpin, String password, double initialDeposit) {
+        this.username = username;
+        this.mpin = mpin;
+        this.password = password;
+        this.balance = initialDeposit;
+        this.transactionLogs = new ArrayList<>();
+        addLog("Account Created | Initial Deposit: PHP " + String.format("%.2f", initialDeposit));
+    }
+
+    public void addLog(String action) {
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        transactionLogs.add(timestamp + " | " + action);
+    }
+}
+
+ class Mada {
+    static Scanner scanner = new Scanner(System.in);
+    static ArrayList<User> userList = new ArrayList<>();
+    static User currentUser;
+    static boolean isRunning = true;
+
+    public static void main(String[] args) {
+        while (true) {
+            System.out.println("\n===== MADA BANK =====");
+            System.out.println("1. Login");
+            System.out.println("2. Register New Account");
+            System.out.println("3. Exit");
+            System.out.print("Enter your choice: ");
+            int choice = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (choice) {
+                case 1:
+                    login();
+                    break;
+                case 2:
+                    register();
+                    break;
+                case 3:
+                    System.out.println("👋 Thank you! Goodbye!");
+                    return;
+                default:
+                    System.out.println("❌ Invalid choice! Try again");
+            }
+        }
+    }
+
+    static void register() {
+        System.out.println("\n===== CREATE NEW ACCOUNT =====");
+        
+        System.out.print("Enter desired Username: ");
+        String newUser = scanner.nextLine();
+
+        for (User u : userList) {
+            if (u.username.equals(newUser)) {
+                System.out.println("❌ Username already taken! Try another");
+                return;
+            }
+        }
+
+        System.out.print("Enter MPIN (4 digits): ");
+        String newMpin = scanner.nextLine();
+
+
+
+        System.out.print("Enter Initial Deposit (PHP): ");
+        double deposit = scanner.nextDouble();
+        scanner.nextLine();
+
+        userList.add(new User(newUser, newMpin, newMpin, deposit));
+        System.out.println("✅ Account Created Successfully! You can now login");
+    }
+
+    static void login() {
+        System.out.println("\n===== LOGIN =====");
+        
+        System.out.print("Enter Username: ");
+        String user = scanner.nextLine();
+
+        System.out.print("Enter MPIN: ");
+        String mpin = scanner.nextLine();
+
+
+
+        for (User u : userList) {
+            if (u.username.equals(user) && u.mpin.equals(mpin) ) {
+                currentUser = u;
+                System.out.println("\n✅ Login Successful! Welcome " + user);
+                currentUser.addLog("Logged In");
+                showMainMenu();
+                return;
+            }
+        }
+        System.out.println("❌ Invalid Username, MPIN or Password!");
+    }
+
+    static void showMainMenu() {
+        while (isRunning) {
+            System.out.println("\n******************");
+            System.out.println("MADA BANK");
+            System.out.println("****************");
+            System.out.println("1. Show balance");
+            System.out.println("2. Deposit");
+            System.out.println("3. Withdraw");
+            System.out.println("4. View Transaction Logs");
+            System.out.println("5. Logout");
+            System.out.println("****************");
+
+            System.out.print("Enter your choice (1-5): ");
+            int choice = scanner.nextInt();
+
+            switch (choice) {
+                case 1:
+                    showBalance();
+                    break;
+                case 2:
+                    deposit();
+                    break;
+                case 3:
+                    withdraw();
+                    break;
+                case 4:
+                    showLogs();
+                    break;
+                case 5:
+                    isRunning = false;
+                    currentUser.addLog("Logged Out");
+                    System.out.println("👋 Logged out successfully!");
+                    return;
+                default:
+                    System.out.println("❌ Invalid choice! Try again");
+            }
+        }
+    }
+
+    static void showBalance() {
+        System.out.println("💰 Current Balance: PHP " + String.format("%.2f", currentUser.balance));
+    }
+
+    static void deposit() {
+        System.out.print("Enter amount to deposit: PHP ");
+        double amount = scanner.nextDouble();
+        if (amount > 0) {
+            currentUser.balance += amount;
+            currentUser.addLog("Deposited: PHP " + String.format("%.2f", amount));
+            System.out.println("✅ Deposit Successful!");
+            showBalance();
+        } else {
+            System.out.println("❌ Please enter valid amount!");
+        }
+    }
+
+    static void withdraw() {
+        System.out.print("Enter amount to withdraw: PHP ");
+        double amount = scanner.nextDouble();
+        if (amount > 0 && amount <= currentUser.balance) {
+            currentUser.balance -= amount;
+            currentUser.addLog("Withdrew: PHP " + String.format("%.2f", amount));
+            System.out.println("✅ Withdrawal Successful!");
+            showBalance();
+        } else if (amount > currentUser.balance) {
+            System.out.println("❌ Insufficient Balance!");
+        } else {
+            System.out.println("❌ Please enter valid amount!");
+        }
+    }
+
+    static void showLogs() {
+        System.out.println("\n===== TRANSACTION HISTORY =====");
+        if (currentUser.transactionLogs.isEmpty()) {
+            System.out.println("No transactions found.");
+        } else {
+            for (String log : currentUser.transactionLogs) {
+                System.out.println("• " + log);
+            }
+        }
+        System.out.println("================================");
+    }
+}
